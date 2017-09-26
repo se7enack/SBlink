@@ -73,11 +73,16 @@ theMenu () {
                     curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/page/${n} | sed 's/"/ /g' | sed "s/regexp/\\`echo -e '\n\r'`/g" | tr ' ' '\n' | grep -e mp4 &> .sjb${n}
                 done
                 for ADDRESS in $( cat .sjb* ); do
-                    echo "Downloading ${ADDRESS} to ${OUTPUTDIR}"
                     ADDRESS2=$( echo $ADDRESS | sed 's:.*/::' )
-                    curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS2}
-                done
-                
+                    PAD=$(echo $ADDRESS | tr -dc '_' | awk '{ print length; }')
+                    ADDRESS2=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
+                    echo "Downloading ${ADDRESS2} to ${OUTPUTDIR}"
+                    ls ${OUTPUTDIR}/${ADDRESS2} &> /dev/null
+                    if ! [ $? -eq 0 ]; then
+                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS2}
+                    fi
+                done 
+                rm .sjb* &> /dev/null 
                 echo "Download complete. Your videos can be found here: ${OUTPUTDIR}"
                 exit
                 ;;
