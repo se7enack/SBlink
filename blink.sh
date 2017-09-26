@@ -20,6 +20,25 @@ preReq () {
     fi
 }
 
+banner () {
+    echo '                                                                '
+    echo '                                                                '
+    echo '  .--.--.       ,---,.   ,--,                              ,-.  '
+    echo ' /  /    `.   ,`  .`  \,--.`|     ,--,                 ,--/ /|  '
+    echo '|  :  /`. / ,---.` .` ||  | :   ,--.`|         ,---, ,--. :/ |  '
+    echo ';  |  |--`  |   |  |: |:  : `   |  |,      ,-+-. /  |:  : ` /   '
+    echo '|  :  ;_    :   :  :  /|  ` |   `--`_     ,--.`|`   ||  `  /    '
+    echo ' \  \    `. :   |    ; `  | |   ,` ,`|   |   |  ,`` |`  |  :    '
+    echo '  `----.   \|   :     \|  | :   `  | |   |   | /  | ||  |   \   '
+    echo '  __ \  \  ||   |   . |`  : |__ |  | :   |   | |  | |`  : |. \  '
+    echo ' /  /`--`  /`   :  `; ||  | `.`|`  : |__ |   | |  |/ |  | ` \ \ '
+    echo '`--`.     / |   |  | ; ;  :    ;|  | `.`||   | |--`  `  : |--`  '
+    echo '  `--`---`  |   :   /  |  ,   / ;  :    ;|   |/      ;  |,`     '
+    echo '            |   | ,`    ---`-`  |  ,   / `---`       `--`       '
+    echo '            `----`               ---`-`                         '
+    echo '                                                                '    
+}
+
 helpMe () {
     echo Options are currently limited to: { cameras, unwatched, homescreen, events, newvideos, allvideos }
 }
@@ -57,8 +76,7 @@ theMenu () {
         "Arm network" "Disarm network" "Get homescreen information" \
         "Get events for network" "Capture a new thumbnail" "Capture a new video" \
         "Get a total on the number of videos" "Get paginated video information" \
-        "Get video information" "Unwatched video list" "Delete a video" "Delete all videos" \
-        "Get a list of all cameras" "Get camera information" "Get camera sensor information" \
+        "Unwatched video list" "Get a list of all cameras" "Get camera information" "Get camera sensor information" \
         "Enable motion detection" "Disable motion detection" "Get information about connected devices" \
         "Get information about supported regions" "Get information about system health" "Get information about programs")
     select opt in "${options[@]}"
@@ -157,41 +175,17 @@ theMenu () {
                 ;;
             "Get paginated video information")
                 echo;echo "Get paginated video information"
-                CALL="/api/v2/videos/page/0"
-                SWITCH=""
-                JQ=true
-                break
-                ;;
-            "Get video information")
-                curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/events/network/${NETWORKID} | jq '.' #| grep -E '"name"|"video_id'
-                echo;echo "Please enter the VIDEOID:"
-                read VIDEOID
-                echo "Get information on video ${VIDEOID}"
-                CALL="/api/v2/video/${VIDEOID}"
-                SWITCH=""
-                JQ=true
-                break
+                COUNT=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/count | sed -n 's/\"count"\://p' | tr -d '{}')
+                COUNT=$(((${COUNT} / 10)+2))
+                for ((n=0;n<${COUNT};n++)); do
+                    curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/page/${n} | jq -C
+                done
+                exit
                 ;;
             "Unwatched video list")
                 echo;echo "Get a list of unwatched videos"
                 CALL="/api/v2/videos/unwatched"
                 SWITCH=""
-                JQ=true
-                break
-                ;;
-            "Delete a video")
-                echo;echo "Please enter the VIDEOID:"
-                read VIDEOID
-                echo "Delete video ${VIDEOID}"
-                CALL="/api/v2/video/${VIDEOID}/delete"
-                SWITCH="--data-binary"
-                JQ=true
-                break
-                ;;
-            "Delete all videos")
-                echo;echo "Delete all videos"
-                CALL="/api/v2/videos/deleteall"
-                SWITCH="--data-binary"
                 JQ=true
                 break
                 ;;
@@ -278,7 +272,7 @@ theMenu () {
     done
 }
 
-clear;preReq;credGet;theMenu
+clear;preReq;credGet;banner;theMenu
 
 if [ ${JQ} == true ]; then
     clear
