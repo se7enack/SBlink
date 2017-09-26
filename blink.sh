@@ -54,7 +54,7 @@ credGet () {
 theMenu () {
     PS3='What do you want to do? : '
     options=("Download all videos" "Get network information" "Get Sync Module information" \
-        "Arm network" "Disarm network" "Get status" "Get homescreen information" \
+        "Arm network" "Disarm network" "Get homescreen information" \
         "Get events for network" "Capture a new thumbnail" "Capture a new video" \
         "Get a total on the number of videos" "Get paginated video information" \
         "Get video information" "Unwatched video list" "Delete a video" "Delete all videos" \
@@ -111,15 +111,6 @@ theMenu () {
                 echo;echo "Disarm network ${NETWORKID}"
                 CALL="/network/${NETWORKID}/disarm"
                 SWITCH="--data-binary"
-                JQ=true
-                break
-                ;;
-            "Get status")
-                echo;echo "Please enter the command (Options: lv_relay, arm, disarm, thumbnail, clip):"
-                read COMMANDID
-                echo "Get status for command ${COMMANDID}"
-                CALL="/network/${NETWORKID}/command/${COMMANDID}"
-                SWITCH=""
                 JQ=true
                 break
                 ;;
