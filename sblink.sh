@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Folder in ~ for Blink auth/cred files to be saved
-BLINKDIR=".blink2"
+BLINKDIR=".sblink"
 #API endpoint
 URL="prod.immedia-semi.com"
 #Output directory for videos
@@ -37,10 +37,6 @@ banner () {
     echo '            |   | ,`    ---`-`  |  ,   / `---`       `--`       '
     echo '            `----`               ---`-`                         '
     echo '                                                                '    
-}
-
-helpMe () {
-    echo Options are currently limited to: { cameras, unwatched, homescreen, events, newvideos, allvideos }
 }
 
 credGet () {
