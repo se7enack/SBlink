@@ -1,5 +1,5 @@
 # SBlink
-Munu driven tool to connect to the Blink API to download videos from your camera as well as modify the settings on your unit.
+Menu driven tool to connect to the Blink API to download videos from your camera as well as modify the settings on your unit.
 
 Usage:
 ./blink
