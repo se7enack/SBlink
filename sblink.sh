@@ -48,7 +48,7 @@ credGet () {
 		echo ${EMAIL} > ~/${BLINKDIR}/creds
 		echo
 		echo Enter your password:
-		read PASSWORD
+		read -s PASSWORD
 		echo ${PASSWORD} >> ~/${BLINKDIR}/creds
 	fi
 	EMAIL=$(sed -n '1p' ~/${BLINKDIR}/creds)
