@@ -89,11 +89,13 @@ theMenu () {
                 for ADDRESS in $( cat .sjb* ); do
                     ADDRESS2=$( echo $ADDRESS | sed 's:.*/::' )
                     PAD=$(echo $ADDRESS | tr -dc '_' | awk '{ print length; }')
-                    ADDRESS2=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
-                    echo "Downloading ${ADDRESS2} to ${OUTPUTDIR}"
-                    ls ${OUTPUTDIR}/${ADDRESS2} &> /dev/null
+                    ADDRESS3=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
+                    DATESTAMP=$(echo $ADDRESS3 | grep -Eo '[0-9]{1,4}' | tr -d '\n' | sed 's/.$//')
+                    echo "Downloading ${ADDRESS3} to ${OUTPUTDIR}"
+                    ls ${OUTPUTDIR}/${ADDRESS3} &> /dev/null
                     if ! [ $? -eq 0 ]; then
-                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS2}
+                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS3}
+                        touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS3}
                     fi
                 done 
                 rm .sjb* &> /dev/null 
