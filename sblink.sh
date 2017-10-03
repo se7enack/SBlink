@@ -36,7 +36,7 @@ banner () {
     echo '  `--`---`  |   :   /  |  ,   / ;  :    ;|   |/      ;  |,`     '
     echo '            |   | ,`    ---`-`  |  ,   / `---`       `--`       '
     echo '            `----`               ---`-`                         '
-    echo '                                                                '    
+    echo '                                                                '  
 }
 
 credGet () {
@@ -96,6 +96,9 @@ theMenu () {
                     if ! [ $? -eq 0 ]; then
                         curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS3}
                         touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS3}
+                        tput setaf 2
+                        echo "[ ** ${ADDRESS3} is new! ** ]"
+                        tput sgr0
                     fi
                 done 
                 rm .sjb* &> /dev/null 
