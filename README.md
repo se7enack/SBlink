@@ -2,7 +2,7 @@
 Menu driven tool to connect to the Blink API to download videos from your camera as well as modify the settings on your unit.
 
 Usage:
-./blink
+./sblink.sh
 
 *Be sure to change the value of OUTPUTDIR to a valid path on your system.
 
