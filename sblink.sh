@@ -3,7 +3,7 @@
 #Folder in ~ for Blink auth/cred files to be saved
 BLINKDIR=".sblink"
 #API endpoint
-URL="prod.immedia-semi.com"
+URL="rest.prod.immedia-semi.com"
 #Output directory for videos
 OUTPUTDIR="/tmp"
 
