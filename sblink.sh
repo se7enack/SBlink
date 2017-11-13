@@ -63,7 +63,8 @@ credGet () {
 		exit
 	fi
 	fi
-	NETWORKID=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/networks | grep -o '\"summary\":{\".\{0,6\}' | cut -c13-)
+	NETWORKID=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/networks | grep -o '\"summary\":{\".\{0,6\}' | cut -c13- | grep -o '[[:digit:]]*')
+    echo Network ID: ${NETWORKID}
 }
 
 theMenu () {
