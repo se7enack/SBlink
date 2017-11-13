@@ -75,7 +75,7 @@ theMenu () {
         "Get a total on the number of videos" "Get paginated video information" \
         "Unwatched video list" "Get a list of all cameras" "Get camera information" "Get camera sensor information" \
         "Enable motion detection" "Disable motion detection" "Get information about connected devices" \
-        "Get information about supported regions" "Get information about system health" "Get information about programs")
+        "Get information about supported regions" "Get information about system health" "Get information about programs" "Quit")
     select opt in "${options[@]}"
     do
         case $opt in
@@ -277,18 +277,25 @@ theMenu () {
     done
 }
 
-clear;preReq;credGet;banner;theMenu
+while [ true ]; do
 
-if [ ${JQ} == true ]; then
+    preReq;credGet;banner;theMenu
+
+    if [ ${JQ} == true ]; then
+        clear
+        echo
+        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL} | jq -C
+        echo
+        echo
+    else 
+        clear
+        echo
+        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL}
+        echo
+        echo
+    fi
+
+    read -p "Press any key..."
     clear
-    echo
-    curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL} | jq -C
-    echo
-    echo
-else 
-    clear
-    echo
-    curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL}
-    echo
-    echo
-fi
+
+done
