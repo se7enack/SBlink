@@ -4,6 +4,7 @@
 BLINKDIR=".sblink"
 #API endpoint
 URL="rest.prod.immedia-semi.com"
+TIMEZONE=":US/Pacific"
 #Output directory for videos
 OUTPUTDIR="clips/"
 
@@ -95,14 +96,21 @@ theMenu () {
                     PAD=$(echo $ADDRESS | tr -dc '_' | awk '{ print length; }')
                     ADDRESS3=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
                     DATESTAMP=$(echo $ADDRESS3 | grep -Eo '[0-9]{1,4}' | tr -d '\n' | sed 's/.$//')
-                    echo "Downloading ${ADDRESS3} to ${OUTPUTDIR}"
-                    ls ${OUTPUTDIR}/${ADDRESS3} &> /dev/null
+                    DATESTAMP2=$( TZ=${TIMEZONE} date -j -f %Y%m%d%H%M%z ${DATESTAMP}+0000 +%Y%m%d%H%M )
+                    ls ${OUTPUTDIR}/${ADDRESS2} &> /dev/null
                     if ! [ $? -eq 0 ]; then
-                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS3}
-                        touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS3}
+                        echo "Downloading ${ADDRESS2} to ${OUTPUTDIR} with timestamp ${DATESTAMP2}"
+                        # download the file
+                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS2}
+                        # touch the file so it appears with the right datestamp
+                        touch -a -m -t ${DATESTAMP2} ${OUTPUTDIR}/${ADDRESS2}
+                        # Print in green
                         tput setaf 2
-                        echo "[ ** ${ADDRESS3} is new! ** ]"
+                        echo "[ ** ${ADDRESS2} is new! ** ]"
+                        # Print back in black
                         tput sgr0
+                    else
+                        echo "${ADDRESS2} was previously downloaded in ${OUTPUTDIR}"
                     fi
                 done 
                 rm .sjb* &> /dev/null 
