@@ -81,7 +81,10 @@ theMenu () {
         case $opt in
             "Download all videos")
                 echo;echo "Download all videos"
+                echo "AUTHCODE = ${AUTHCODE}"
+                echo "URL = ${URL}"
                 COUNT=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/count | sed -n 's/\"count"\://p' | tr -d '{}')
+                echo "Total clips = ${COUNT}"
                 COUNT=$(((${COUNT} / 10)+2))
                 rm .sjb* &> /dev/null
                 for ((n=0;n<${COUNT};n++)); do
