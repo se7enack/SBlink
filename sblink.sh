@@ -4,6 +4,7 @@
 BLINKDIR=".sblink"
 #API endpoint
 URL="rest.prod.immedia-semi.com"
+URL_SUBDOMAIN="prod"
 TIMEZONE=":US/Pacific"
 #Output directory for videos
 OUTPUTDIR="clips/"
@@ -41,29 +42,46 @@ banner () {
 }
 
 credGet () {
-	if [ ! -d ~/${BLINKDIR} ]; then
-		mkdir ~/${BLINKDIR}
-		echo null > ~/${BLINKDIR}/authcode
-		echo Enter your username \(email\):
-		read EMAIL
-		echo ${EMAIL} > ~/${BLINKDIR}/creds
-		echo
-		echo Enter your password:
-		read -s PASSWORD
-		echo ${PASSWORD} >> ~/${BLINKDIR}/creds
-	fi
-	EMAIL=$(sed -n '1p' ~/${BLINKDIR}/creds)
-	PASSWORD=$(sed -n '2p' ~/${BLINKDIR}/creds)
-	AUTHCODE=$(cat ~/${BLINKDIR}/authcode)
+    # Read the cached URL
+    URL2=$(cat ~/${BLINKDIR}/url 2>/dev/null)
+    if [ ! "${URL2}" == "" ]; then 
+        URL=${URL2}
+    fi
+
+    # Read the cached auth code
+    AUTHCODE=$(cat ~/${BLINKDIR}/authcode 2>/dev/null) 
 	AUTHTEST=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/homescreen | grep -o '\"message\":\".\{0,12\}' | cut -c12-)
 	if [ "${AUTHTEST}" == "Unauthorized" ]; then 
-		curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "iPhone 9.2 | 2.2 | 222", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login | grep -o '\"authtoken\":\".\{0,22\}' | cut -c14-  > ~/${BLINKDIR}/authcode
-		AUTHCODE=$(cat ~/${BLINKDIR}/authcode)
-	if [ "${AUTHCODE}" == "" ]; then
-		echo "No Authcode received, please check credentials"
-		exit
+        # Create the temp dir if nothing is cached yet
+        if [ ! -d ~/${BLINKDIR} ]; then
+            mkdir ~/${BLINKDIR}
+        fi
+
+        # Enter the creds
+        echo null > ~/${BLINKDIR}/authcode
+        echo Enter your username \(email\):
+        read EMAIL
+        echo
+        echo Enter your password:
+        read -s PASSWORD
+
+        # Auth the creds and cache the authcode
+		AUTH=$(curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "iPhone 9.2 | 2.2 | 222", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login )
+        # Read the authcode
+        AUTHCODE=$(echo $AUTH | grep -o '\"authtoken\":\".\{0,22\}' | cut -c14-)
+        echo $AUTHCODE > ~/${BLINKDIR}/authcode
+    	if [ "${AUTHCODE}" == "" ]; then
+    		echo "No Authcode received, please check credentials"
+    		exit
+    	fi
+
+        # Read the domain, adjust and cache the URL
+        SUBDOMAIN=$(echo $AUTH | grep -o '\"region\":{"[^"]\+"' | cut -c12- | grep -o '[[:alnum:]]*')
+        URL=${URL/.${URL_SUBDOMAIN}./.${SUBDOMAIN}.}
+        echo $URL > ~/${BLINKDIR}/url
 	fi
-	fi
+
+    # Query the network ID
 	NETWORKID=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/networks | grep -o '\"summary\":{\".\{0,6\}' | cut -c13- | grep -o '[[:digit:]]*')
     echo Network ID: ${NETWORKID}
 }
