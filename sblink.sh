@@ -5,7 +5,7 @@ BLINKDIR=".sblink"
 #API endpoint
 URL="rest.prod.immedia-semi.com"
 #Output directory for videos
-OUTPUTDIR="/tmp"
+OUTPUTDIR="clips/"
 
 preReq () {
     if ! [ -x "$(command -v jq)" ]; then
