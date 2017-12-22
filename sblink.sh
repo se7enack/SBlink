@@ -90,14 +90,16 @@ theMenu () {
                     ADDRESS2=$( echo $ADDRESS | sed 's:.*/::' )
                     PAD=$(echo $ADDRESS | tr -dc '_' | awk '{ print length; }')
                     ADDRESS3=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
+                    CAMERA=$(dirname $ADDRESS | xargs basename)
                     DATESTAMP=$(echo $ADDRESS3 | grep -Eo '[0-9]{1,4}' | tr -d '\n' | sed 's/.$//')
-                    echo "Downloading ${ADDRESS3} to ${OUTPUTDIR}"
-                    ls ${OUTPUTDIR}/${ADDRESS3} &> /dev/null
+                    ADDRESS4=${CAMERA}-${ADDRESS3}
+                    echo "Downloading ${ADDRESS4} to ${OUTPUTDIR}"
+                    ls ${OUTPUTDIR}/${ADDRESS4} &> /dev/null
                     if ! [ $? -eq 0 ]; then
-                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS3}
+                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS4}
                         touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS3}
                         tput setaf 2
-                        echo "[ ** ${ADDRESS3} is new! ** ]"
+                        echo "[ ** ${ADDRESS4} is new! ** ]"
                         tput sgr0
                     fi
                 done 
