@@ -97,7 +97,7 @@ theMenu () {
                     ls ${OUTPUTDIR}/${ADDRESS4} &> /dev/null
                     if ! [ $? -eq 0 ]; then
                         curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS4}
-                        touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS3}
+                        touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS4}
                         tput setaf 2
                         echo "[ ** ${ADDRESS4} is new! ** ]"
                         tput sgr0
