@@ -4,8 +4,10 @@
 BLINKDIR=".sblink"
 #API endpoint
 URL="rest.prod.immedia-semi.com"
+URL_SUBDOMAIN="prod"
+TIMEZONE=":US/Pacific"
 #Output directory for videos
-OUTPUTDIR="/tmp"
+OUTPUTDIR="/tmp/"
 
 preReq () {
     if ! [ -x "$(command -v jq)" ]; then
@@ -40,30 +42,48 @@ banner () {
 }
 
 credGet () {
-	if [ ! -d ~/${BLINKDIR} ]; then
-		mkdir ~/${BLINKDIR}
-		echo null > ~/${BLINKDIR}/authcode
-		echo Enter your username \(email\):
-		read EMAIL
-		echo ${EMAIL} > ~/${BLINKDIR}/creds
-		echo
-		echo Enter your password:
-		read -s PASSWORD
-		echo ${PASSWORD} >> ~/${BLINKDIR}/creds
-	fi
-	EMAIL=$(sed -n '1p' ~/${BLINKDIR}/creds)
-	PASSWORD=$(sed -n '2p' ~/${BLINKDIR}/creds)
-	AUTHCODE=$(cat ~/${BLINKDIR}/authcode)
-	AUTHTEST=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/homescreen | grep -o '\"message\":\".\{0,12\}' | cut -c12-)
-	if [ "${AUTHTEST}" == "Unauthorized" ]; then 
-		curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "iPhone 9.2 | 2.2 | 222", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login | grep -o '\"authtoken\":\".\{0,22\}' | cut -c14-  > ~/${BLINKDIR}/authcode
-		AUTHCODE=$(cat ~/${BLINKDIR}/authcode)
-	if [ "${AUTHCODE}" == "" ]; then
-		echo "No Authcode received, please check credentials"
-		exit
-	fi
-	fi
-	NETWORKID=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/networks | grep -o '\"summary\":{\".\{0,6\}' | cut -c13-)
+    # Read the cached URL
+    URL2=$(cat ~/${BLINKDIR}/url 2>/dev/null)
+    if [ ! "${URL2}" == "" ]; then 
+        URL=${URL2}
+    fi
+
+    # Read the cached auth code
+    AUTHCODE=$(cat ~/${BLINKDIR}/authcode 2>/dev/null) 
+    AUTHTEST=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/homescreen | grep -o '\"message\":\".\{0,12\}' | cut -c12-)
+    if [ "${AUTHTEST}" == "Unauthorized" ]; then 
+        # Create the temp dir if nothing is cached yet
+        if [ ! -d ~/${BLINKDIR} ]; then
+            mkdir ~/${BLINKDIR}
+        fi
+
+        # Enter the creds
+        echo null > ~/${BLINKDIR}/authcode
+        echo Enter your username \(email\):
+        read EMAIL
+        echo
+        echo Enter your password:
+        read -s PASSWORD
+
+        # Auth the creds and cache the authcode
+        AUTH=$(curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "iPhone 9.2 | 2.2 | 222", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login )
+        # Read the authcode
+        AUTHCODE=$(echo $AUTH | grep -o '\"authtoken\":\".\{0,22\}' | cut -c14-)
+        echo $AUTHCODE > ~/${BLINKDIR}/authcode
+        if [ "${AUTHCODE}" == "" ]; then
+            echo "No Authcode received, please check credentials"
+            exit
+        fi
+
+        # Read the domain, adjust and cache the URL
+        SUBDOMAIN=$(echo $AUTH | grep -o '\"region\":{"[^"]\+"' | cut -c12- | grep -o '[[:alnum:]]*')
+        URL=${URL/.${URL_SUBDOMAIN}./.${SUBDOMAIN}.}
+        echo $URL > ~/${BLINKDIR}/url
+    fi
+
+    # Query the network ID
+    NETWORKID=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/networks | grep -o '\"summary\":{\".\{0,6\}' | cut -c13- | grep -o '[[:digit:]]*')
+    echo Network ID: ${NETWORKID}
 }
 
 theMenu () {
@@ -74,13 +94,16 @@ theMenu () {
         "Get a total on the number of videos" "Get paginated video information" \
         "Unwatched video list" "Get a list of all cameras" "Get camera information" "Get camera sensor information" \
         "Enable motion detection" "Disable motion detection" "Get information about connected devices" \
-        "Get information about supported regions" "Get information about system health" "Get information about programs")
+        "Get information about supported regions" "Get information about system health" "Get information about programs" "Quit")
     select opt in "${options[@]}"
     do
         case $opt in
             "Download all videos")
                 echo;echo "Download all videos"
+                echo "AUTHCODE = ${AUTHCODE}"
+                echo "URL = ${URL}"
                 COUNT=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/count | sed -n 's/\"count"\://p' | tr -d '{}')
+                echo "Total clips = ${COUNT}"
                 COUNT=$(((${COUNT} / 10)+2))
                 rm .sjb* &> /dev/null
                 for ((n=0;n<${COUNT};n++)); do
@@ -92,14 +115,20 @@ theMenu () {
                     ADDRESS3=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
                     CAMERA=$(dirname $ADDRESS | xargs basename)
                     DATESTAMP=$(echo $ADDRESS3 | grep -Eo '[0-9]{1,4}' | tr -d '\n' | sed 's/.$//')
+                    DATESTAMP2=$( TZ=${TIMEZONE} date -j -f %Y%m%d%H%M%z ${DATESTAMP}+0000 +%Y%m%d%H%M )
                     ADDRESS4=${CAMERA}-${ADDRESS3}
-                    echo "Downloading ${ADDRESS4} to ${OUTPUTDIR}"
+                    
                     ls ${OUTPUTDIR}/${ADDRESS4} &> /dev/null
                     if ! [ $? -eq 0 ]; then
+                        echo "Downloading ${ADDRESS4} to ${OUTPUTDIR} with timestamp ${DATESTAMP2}"
+                        # download the file
                         curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS4}
-                        touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS4}
+                        # touch the file so it appears with the right datestamp
+                        touch -a -m -t ${DATESTAMP2} ${OUTPUTDIR}/${ADDRESS4}
+                        # Print in green
                         tput setaf 2
                         echo "[ ** ${ADDRESS4} is new! ** ]"
+                        # Print back in black
                         tput sgr0
                     fi
                 done 
@@ -275,18 +304,25 @@ theMenu () {
     done
 }
 
-clear;preReq;credGet;banner;theMenu
+while [ true ]; do
 
-if [ ${JQ} == true ]; then
+    preReq;credGet;banner;theMenu
+
+    if [ ${JQ} == true ]; then
+        clear
+        echo
+        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL} | jq -C
+        echo
+        echo
+    else 
+        clear
+        echo
+        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL}
+        echo
+        echo
+    fi
+
+    read -p "Press any key..."
     clear
-    echo
-    curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL} | jq -C
-    echo
-    echo
-else 
-    clear
-    echo
-    curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" ${SWITCH} --compressed https://${URL}${CALL}
-    echo
-    echo
-fi
+
+done
