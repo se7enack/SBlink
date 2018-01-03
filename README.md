@@ -13,11 +13,3 @@ Before adding, please read: https://github.com/se7enack/SBlink/blob/master/CONTR
 
 ![Alt text](https://github.com/se7enack/SBlink/blob/master/ScreenShot.png?raw=true "SBlink Screenshot")
 
-
-
-
-Thanks,
-Stephen Burke
-https://www.linkedin.com/in/stephenjburke/
-
-
