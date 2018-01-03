@@ -7,7 +7,7 @@ URL="rest.prod.immedia-semi.com"
 URL_SUBDOMAIN="prod"
 TIMEZONE=":US/Pacific"
 #Output directory for videos
-OUTPUTDIR="clips/"
+OUTPUTDIR="/tmp/"
 
 preReq () {
     if ! [ -x "$(command -v jq)" ]; then
@@ -50,8 +50,8 @@ credGet () {
 
     # Read the cached auth code
     AUTHCODE=$(cat ~/${BLINKDIR}/authcode 2>/dev/null) 
-	AUTHTEST=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/homescreen | grep -o '\"message\":\".\{0,12\}' | cut -c12-)
-	if [ "${AUTHTEST}" == "Unauthorized" ]; then 
+    AUTHTEST=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/homescreen | grep -o '\"message\":\".\{0,12\}' | cut -c12-)
+    if [ "${AUTHTEST}" == "Unauthorized" ]; then 
         # Create the temp dir if nothing is cached yet
         if [ ! -d ~/${BLINKDIR} ]; then
             mkdir ~/${BLINKDIR}
@@ -66,23 +66,23 @@ credGet () {
         read -s PASSWORD
 
         # Auth the creds and cache the authcode
-		AUTH=$(curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "iPhone 9.2 | 2.2 | 222", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login )
+        AUTH=$(curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "iPhone 9.2 | 2.2 | 222", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login )
         # Read the authcode
         AUTHCODE=$(echo $AUTH | grep -o '\"authtoken\":\".\{0,22\}' | cut -c14-)
         echo $AUTHCODE > ~/${BLINKDIR}/authcode
-    	if [ "${AUTHCODE}" == "" ]; then
-    		echo "No Authcode received, please check credentials"
-    		exit
-    	fi
+        if [ "${AUTHCODE}" == "" ]; then
+            echo "No Authcode received, please check credentials"
+            exit
+        fi
 
         # Read the domain, adjust and cache the URL
         SUBDOMAIN=$(echo $AUTH | grep -o '\"region\":{"[^"]\+"' | cut -c12- | grep -o '[[:alnum:]]*')
         URL=${URL/.${URL_SUBDOMAIN}./.${SUBDOMAIN}.}
         echo $URL > ~/${BLINKDIR}/url
-	fi
+    fi
 
     # Query the network ID
-	NETWORKID=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/networks | grep -o '\"summary\":{\".\{0,6\}' | cut -c13- | grep -o '[[:digit:]]*')
+    NETWORKID=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/networks | grep -o '\"summary\":{\".\{0,6\}' | cut -c13- | grep -o '[[:digit:]]*')
     echo Network ID: ${NETWORKID}
 }
 
@@ -113,22 +113,23 @@ theMenu () {
                     ADDRESS2=$( echo $ADDRESS | sed 's:.*/::' )
                     PAD=$(echo $ADDRESS | tr -dc '_' | awk '{ print length; }')
                     ADDRESS3=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
+                    CAMERA=$(dirname $ADDRESS | xargs basename)
                     DATESTAMP=$(echo $ADDRESS3 | grep -Eo '[0-9]{1,4}' | tr -d '\n' | sed 's/.$//')
                     DATESTAMP2=$( TZ=${TIMEZONE} date -j -f %Y%m%d%H%M%z ${DATESTAMP}+0000 +%Y%m%d%H%M )
-                    ls ${OUTPUTDIR}/${ADDRESS2} &> /dev/null
+                    ADDRESS4=${CAMERA}-${ADDRESS3}
+                    
+                    ls ${OUTPUTDIR}/${ADDRESS4} &> /dev/null
                     if ! [ $? -eq 0 ]; then
-                        echo "Downloading ${ADDRESS2} to ${OUTPUTDIR} with timestamp ${DATESTAMP2}"
+                        echo "Downloading ${ADDRESS4} to ${OUTPUTDIR} with timestamp ${DATESTAMP2}"
                         # download the file
-                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS2}
+                        curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS4}
                         # touch the file so it appears with the right datestamp
-                        touch -a -m -t ${DATESTAMP2} ${OUTPUTDIR}/${ADDRESS2}
+                        touch -a -m -t ${DATESTAMP2} ${OUTPUTDIR}/${ADDRESS4}
                         # Print in green
                         tput setaf 2
-                        echo "[ ** ${ADDRESS2} is new! ** ]"
+                        echo "[ ** ${ADDRESS4} is new! ** ]"
                         # Print back in black
                         tput sgr0
-                    else
-                        echo "${ADDRESS2} was previously downloaded in ${OUTPUTDIR}"
                     fi
                 done 
                 rm .sjb* &> /dev/null 
