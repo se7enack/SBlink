@@ -124,7 +124,7 @@ theMenu () {
                         # download the file
                         curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS4}
                         # touch the file so it appears with the right datestamp
-                        touch -a -m -t ${DATESTAMP2} ${OUTPUTDIR}/${ADDRESS4}
+                        TZ=UTC touch -a -m -t ${DATESTAMP2} ${OUTPUTDIR}/${ADDRESS4}
                         # Print in green
                         tput setaf 2
                         echo "[ ** ${ADDRESS4} is new! ** ]"
