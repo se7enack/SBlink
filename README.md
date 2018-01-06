@@ -1,5 +1,5 @@
 # SBlink
-Menu driven tool to connect to the Blink API to download videos from your camera as well as modify the settings on your unit.
+SBlink is a free menu driven bash tool for connecting to the Blink API. It allows you to download videos taken from your cameras as well as modify various settings on your units.
 
 Usage:
 ./sblink.sh
