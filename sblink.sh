@@ -105,7 +105,7 @@ theMenu () {
                 COUNT=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/count | sed -n 's/\"count"\://p' | tr -d '{}')
                 echo "Total clips = ${COUNT}"
                 COUNT=$(((${COUNT} / 10)+2))
-for ((n=0;n<${COUNT};n++)); do
+                for ((n=0;n<${COUNT};n++)); do
                     VIDEOS=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/page/${n} | jq -c '.[] | { address: .address, id: .id }')
                     for VIDEO in $VIDEOS; do
                         ADDRESS=$(echo $VIDEO | jq -r '.address')
