@@ -105,7 +105,7 @@ theMenu () {
                 COUNT=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/count | sed -n 's/\"count"\://p' | tr -d '{}')
                 echo "Total clips = ${COUNT}"
                 COUNT=$(((${COUNT} / 10)+2))
-                for ((n=0;n<${COUNT};n++)); do
+for ((n=0;n<${COUNT};n++)); do
                     VIDEOS=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/page/${n} | jq -c '.[] | { address: .address, id: .id }')
                     for VIDEO in $VIDEOS; do
                         ADDRESS=$(echo $VIDEO | jq -r '.address')
@@ -115,6 +115,7 @@ theMenu () {
                         ADDRESS3=$(echo $ADDRESS2 | cut -d '_' -f $(($PAD-4))-99)
                         CAMERA=$(dirname $ADDRESS | xargs basename)
                         DATESTAMP=$(echo $ADDRESS3 | grep -Eo '[0-9]{1,4}' | tr -d '\n' | sed 's/.$//')
+                        DATESTAMP2=$( TZ=${TIMEZONE} date -j -f %Y%m%d%H%M%z ${DATESTAMP}+0000 +%Y%m%d%H%M )
                         ADDRESS3_FILENAME="${ADDRESS3%.*}"
                         ADDRESS3_EXTENSION="${ADDRESS3##*.}"
                         ADDRESS4=${ADDRESS3_FILENAME}-${CAMERA}
@@ -126,7 +127,7 @@ theMenu () {
                             # download the file
                             curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}/${ADDRESS} > ${OUTPUTDIR}/${ADDRESS5}
                             # touch the file so it appears with the right datestamp
-                            TZ=UTC touch -a -m -t ${DATESTAMP} ${OUTPUTDIR}/${ADDRESS5}
+                            TZ=UTC touch -a -m -t ${DATESTAMP2} ${OUTPUTDIR}/${ADDRESS5}
                             # Print in green
                             tput setaf 2
                             echo "[ ** ${ADDRESS5} is new! ** ]"
@@ -134,7 +135,7 @@ theMenu () {
                             tput sgr0
                         fi
                     done 
-                done 
+                done
                 echo "Download complete. Your videos can be found here: ${OUTPUTDIR}"
                 exit
                 ;;
