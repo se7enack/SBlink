@@ -7,7 +7,7 @@ URL="rest.prod.immedia-semi.com"
 URL_SUBDOMAIN="prod"
 TIMEZONE=":US/Pacific"
 #Output directory for videos
-OUTPUTDIR="/Users/stephen/git/.SBlink/videos/"
+OUTPUTDIR="/tmp/"
 
 preReq () {
     if ! [ -x "$(command -v jq)" ]; then
