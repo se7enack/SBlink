@@ -7,7 +7,7 @@ URL="rest.prod.immedia-semi.com"
 URL_SUBDOMAIN="prod"
 TIMEZONE=":US/Pacific"
 #Output directory for videos
-OUTPUTDIR="/tmp/"
+OUTPUTDIR="/Users/stephen/git/.SBlink/videos/"
 
 preReq () {
     if ! [ -x "$(command -v jq)" ]; then
@@ -19,6 +19,9 @@ preReq () {
         echo "           https://stedolan.github.io/jq/ " 
         echo
         exit
+    else
+        JQ=true
+        SWITCH=""        
     fi
 }
 
@@ -94,7 +97,7 @@ theMenu () {
         "Get a total on the number of videos" "Get paginated video information" \
         "Unwatched video list" "Get a list of all cameras" "Get camera information" "Get camera sensor information" \
         "Enable motion detection" "Disable motion detection" "Get information about connected devices" \
-        "Get information about supported regions" "Get information about system health" "Get information about programs" "Quit")
+        "Get information about supported regions" "Get information about programs" "Quit")
     select opt in "${options[@]}"
     do
         case $opt in
@@ -142,43 +145,33 @@ theMenu () {
             "Get network information")
                 echo;echo "Get network information"
                 CALL="/networks"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Get Sync Module information")
                 echo;echo "Get Sync Module information"
                 CALL="/network/${NETWORKID}/syncmodules"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Arm network")
                 echo;echo "Arm network ${NETWORKID}"
                 CALL="/network/${NETWORKID}/arm"
                 SWITCH="--data-binary"
-                JQ=true
                 break
                 ;;
             "Disarm network")
                 echo;echo "Disarm network ${NETWORKID}"
                 CALL="/network/${NETWORKID}/disarm"
                 SWITCH="--data-binary"
-                JQ=true
                 break
                 ;;
             "Get homescreen information")
                 echo;echo "Get homescreen information"
                 CALL="/homescreen"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Get events for network")
                 echo;echo "Get events for network ${NETWORKID}"
                 CALL="/events/network/${NETWORKID}"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Capture a new thumbnail")
@@ -188,7 +181,6 @@ theMenu () {
                 echo "Capture a new thumbnail from camera ${CAMERAID}"
                 CALL="/network/${NETWORKID}/camera/${CAMERAID}/thumbnail"
                 SWITCH="--data-binary"
-                JQ=true
                 break
                 ;;
             "Capture a new video")
@@ -198,14 +190,11 @@ theMenu () {
                 echo "Capture a new video from camera ${CAMERAID}"
                 CALL="/network/${NETWORKID}/camera/${CAMERAID}/clip"
                 SWITCH="--data-binary"
-                JQ=true
                 break
                 ;;
             "Get a total on the number of videos")
                 echo;echo "Get a total on the number of videos"
                 CALL="/api/v2/videos/count"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Get paginated video information")
@@ -220,15 +209,11 @@ theMenu () {
             "Unwatched video list")
                 echo;echo "Get a list of unwatched videos"
                 CALL="/api/v2/videos/unwatched"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Get a list of all cameras")
                 echo;echo "Get a list of all cameras"
                 CALL="/network/${NETWORKID}/cameras"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Get camera information")
@@ -237,8 +222,6 @@ theMenu () {
                 read CAMERAID
                 echo "Get information for camera ${CAMERAID}"
                 CALL="/network/${NETWORKID}/camera/${CAMERAID}"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Get camera sensor information")
@@ -247,8 +230,6 @@ theMenu () {
                 read CAMERAID
                 echo "Get camera sensor information for camera ${CAMERAID}"
                 CALL="/network/${NETWORKID}/camera/${CAMERAID}/signals"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Enable motion detection")
@@ -258,7 +239,6 @@ theMenu () {
                 echo "Enable motion detection for camera ${CAMERAID}"
                 CALL="/network/${NETWORKID}/camera/${CAMERAID}/enable"
                 SWITCH="--data-binary"
-                JQ=true
                 break
                 ;;
             "Disable motion detection")
@@ -268,35 +248,21 @@ theMenu () {
                 echo "Disable motion detection for camera ${CAMERAID}"
                 CALL="/network/${NETWORKID}/camera/${CAMERAID}/disable"
                 SWITCH="--data-binary"
-                JQ=true
                 break
                 ;;
             "Get information about connected devices")
                 echo;echo "Get information about connected devices"
                 CALL="/account/clients"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Get information about supported regions")
                 echo;echo "Get information about supported regions"
                 CALL="/regions"
-                SWITCH=""
-                JQ=true
-                break
-                ;;
-            "Get information about system health")
-                echo;echo "Get information about system health"
-                CALL="/health"
-                SWITCH=""
-                JQ=false
                 break
                 ;;
             "Get information about programs")
                 echo;echo "Get information about programs"
                 CALL="/api/v1/networks/${NETWORKID}/programs"
-                SWITCH=""
-                JQ=true
                 break
                 ;;
             "Quit")
