@@ -69,7 +69,7 @@ credGet () {
         read -s PASSWORD
 
         # Auth the creds and cache the authcode
-        AUTH=$(curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "iPhone 9.2 | 2.2 | 222", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login )
+        AUTH=$(curl -s -H "Host: ${URL}" -H "Content-Type: application/json" --data-binary '{ "password" : "'"${PASSWORD}"'", "client_specifier" : "https://github.com/se7enack/SBlink", "email" : "'"${EMAIL}"'" }' --compressed https://${URL}/login )
         # Read the authcode
         AUTHCODE=$(echo $AUTH | grep -o '\"authtoken\":\".\{0,22\}' | cut -c14-)
         echo $AUTHCODE > ~/${BLINKDIR}/authcode
