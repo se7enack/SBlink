@@ -105,11 +105,16 @@ theMenu () {
                 echo;echo "Download all videos"
                 echo "AUTHCODE = ${AUTHCODE}"
                 echo "URL = ${URL}"
-                COUNT=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/count | sed -n 's/\"count"\://p' | tr -d '{}')
-                echo "Total clips = ${COUNT}"
-                COUNT=$(((${COUNT} / 10)+2))
-                for ((n=0;n<${COUNT};n++)); do
-                    VIDEOS=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed https://${URL}//api/v2/videos/page/${n} | jq -c '.[] | { address: .address, id: .id }')
+                DATE='2016-01-01T23:11:21+0000'
+                n=1
+                while : ; do
+                    RESPONSE=$(curl -s -H "Host: ${URL}" -H "TOKEN_AUTH: ${AUTHCODE}" --compressed -X GET -G https://${URL}/api/v2/videos/changed -d since=${DATE} -d page=${n})
+                    VIDEOS=$(echo ${RESPONSE} | jq -c '.videos[]  | select(.deleted == false) | { address: .address, id: .id }')
+                    COUNT=$(echo ${RESPONSE} | jq -c '[.videos[]] | length')
+                    if [ $COUNT -eq 0 ]; then
+                        echo "Done"
+                        break
+                    fi
                     for VIDEO in $VIDEOS; do
                         ADDRESS=$(echo $VIDEO | jq -r '.address')
                         ID=$(echo $VIDEO | jq -r '.id')
@@ -137,7 +142,8 @@ theMenu () {
                             # Print back in black
                             tput sgr0
                         fi
-                    done 
+                    done
+                    n=$((n+1))
                 done
                 echo "Download complete. Your videos can be found here: ${OUTPUTDIR}"
                 exit
